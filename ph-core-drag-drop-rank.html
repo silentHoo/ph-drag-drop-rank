@@ -1,0 +1,234 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/core-drag-drop/core-drag-drop.html">
+
+<!--
+This component allows you to easily setup an interactive **drag & drop** for individual styled items. Each item
+has its own content and is provided by the consumer of the component.
+
+Example:
+
+    <ph-drag-drop-rank>
+      <item>Answer 1</item>
+      <item>Answer 2</item>
+      <item>Answer 3</item>
+      <item>Answer 4</item>
+      <item>Answer 5</item>
+      <item>Answer 6</item>
+    </ph-drag-drop-rank>
+
+@group Question Type Survey Elements
+@element ph-drag-drop-rank
+@homepage https://github.com/silentHoo
+-->
+
+<polymer-element name="ph-drag-drop-rank" attributes="">
+  <template>
+    <link rel="stylesheet" href="ph-drag-drop-rank.css">
+
+    <!-- There seems no solution to use <content> to prevent the rendering of the distributed nodes -->
+    <!--  -> related: https://www.w3.org/Bugs/Public/show_bug.cgi?id=18429 -->
+    <div style="display: none;">
+      <content id="items" select="item"></content>
+    </div>
+
+    <!-- we use the core-drag-drop element to use drag & drop functionality -->
+    <core-drag-drop></core-drag-drop>
+
+    <div id="dragdroparea">
+
+      <!--
+        we can't use the declarative syntax, because we cannot insert untrusted html here
+        this is limited because of XSS attacks that are possible if html is not filtered.
+        Polymer will prevent you from using html in data binding.
+
+         -> http://stackoverflow.com/questions/22199662/how-to-inject-html-into-a-template-with-polymer/22208332#22208332
+         -> if you're sure that all distributed html content is safe, checkout http://stackoverflow.com/a/22995666/763907
+            to use another component that can stamp out that html for you.
+         -> a good and safe workaround is this: http://stackoverflow.com/a/25565699/763907
+
+         -> The only practicable solution to allow the styling outside of this component is to use getDistributedNodes()
+
+        <template repeat="{{ item, index in _itemsToDrag }}">
+          <div draggable="true">{{ item }}</div>
+        </template>
+      -->
+
+    </div>
+  </template>
+
+  <script>
+    (function () {
+
+      Polymer({
+        _items: null,
+
+        // saves the screen coordinates where the user tapped into the items bounding box. This is necessary to
+        // move the item as a copy under the mouse pointer/finger when the user drag the item around.
+        _userCoordinates: {
+          x: -1,
+          y: -1
+        },
+
+        // stores the bounding box pixel coordinates to adjust the position of the dragged element when the user
+        // drags it.
+        _itemBoundingBox: null,
+
+        // stores the `<core-drag-drop>`s avatar element. This is where the content is placed when the user drags
+        // an element around. There is the place where we insert the copy of the item to give user feedback.
+        _avatarNode: null,
+
+        // stores the element the user has dragged previously
+        _dragTarget: null,
+
+        // stores the last dragged element
+        _lastDragTarget: null,
+
+        // stores the last element where the user has dropped the dragged element
+        _lastDropTarget: null,
+
+        // fired when the component is ready
+        ready: function() {
+          this._initState();
+        },
+
+        // insert all consumer provided items into the drag and drop area
+        _draw: function() {
+          this.$.dragdroparea.innerHTML = '';
+
+          for (var i = 0; i < this._items.length; i++) {
+            // we must ensure, that the item-index is always up to date
+            this._items[i].setAttribute('item-index', i);
+            this.$.dragdroparea.appendChild(this._items[i]);
+          }
+        },
+
+        // gets all the consumer provided distributed item nodes
+        _initState: function() {
+          // save distributed nodes in state
+          this._items = Array.prototype.slice.call(this.$.items.getDistributedNodes());
+
+          for (var i = 0; i < this._items.length; i++) {
+            this._items[i].setAttribute('draggable', false);
+
+            // we must save the mouse/finger down position to adjust the element accordingly
+            // when the user is tapping on an element
+            this._items[i].addEventListener('down', (function(event) {
+              this._userCoordinates.x = event.x;
+              this._userCoordinates.y = event.y;
+            }).bind(this));
+          }
+
+          // insert the elements the first time
+          this._draw();
+
+          // wait for a drag start event
+          this.addEventListener('drag-start', this.onDragStart.bind(this));
+        },
+
+        // called when the user begins to start a drag action
+        onDragStart: function(e) {
+          // only if this is not the first time, we remove previously attached class names from the nodes
+          if (this._lastDragTarget !== null && this._lastDropTarget !== null) {
+            // remove classes from the previous drag & drop action
+            this._lastDragTarget.classList.remove('dropped-source');
+            this._lastDropTarget.classList.remove('dropped-target');
+          }
+
+          var dragInfo = e.detail;
+
+          // dragged element
+          this._dragTarget = dragInfo.event.target;
+
+          // we will only drag items around, nothing else ;)
+          if (this._dragTarget.nodeName != 'ITEM') {
+            return;
+          }
+
+          this._itemBoundingBox = this._dragTarget.getBoundingClientRect();
+          this._avatarNode = dragInfo.avatar;
+
+          this._prepareAvatar();
+
+          // setup callbacks
+          dragInfo.drag = (this._onDrag).bind(this);
+          dragInfo.drop = (this._onDrop).bind(this);
+        },
+
+        // is multiple times called when the user drags an element around
+        _onDrag: function (dragInfo) {
+          this._dragTarget.classList.add('dragging');
+        },
+
+        // is called when the user drops an element
+        _onDrop: function (dragInfo) {
+          var dragTarget = this._dragTarget;
+          var dropTarget = dragInfo.event.relatedTarget;
+
+          dragTarget.classList.remove('dragging');
+          dragTarget.classList.add('dropped-source');
+          dropTarget.classList.add('dropped-target');
+
+          // we let only drop items on items
+          if (dropTarget.nodeName != 'ITEM') {
+            return;
+          }
+
+          // change order
+          var dragTargetItemId = parseInt(dragTarget.getAttribute('item-index'));
+          var dropTargetItemId = parseInt(dropTarget.getAttribute('item-index'));
+
+          var temp = this._items[dragTargetItemId];
+          this._items[dragTargetItemId] = this._items[dropTargetItemId];
+          this._items[dropTargetItemId] = temp;
+
+          this._draw();
+
+          this._lastDragTarget = dragTarget;
+          this._lastDropTarget = dropTarget;
+        },
+
+        // the avatar is a wrapper container to place something in so that the user have a visual feedback of what
+        // he drags around
+        _prepareAvatar: function() {
+          // where was the tap/mouse down?
+          // console.log('clicked at ' + this._userCoordinates.x + '/' + this._userCoordinates.y);
+
+          // where is the item placed?
+          // console.log('bb at ' + this._itemBoundingBox.left + '/' + this._itemBoundingBox.top);
+
+          // move left: click.x - bb.left - marginLeft
+          // move top: click.y - bb.top - marginTop
+          var marginLeft = parseInt(this._getComputedStyleValue(this._dragTarget, 'marginLeft'));
+          var marginTop = parseInt(this._getComputedStyleValue(this._dragTarget, 'marginTop'));
+
+          var moveLeft = this._userCoordinates.x - (this._itemBoundingBox.left - marginLeft);
+          var moveTop = this._userCoordinates.y - (this._itemBoundingBox.top - marginTop);
+
+          // delete all child nodes
+          this._avatarNode.innerHTML = '';
+
+          // append the current dragged element as new child (and as the only child)
+          var clonedItem = this._dragTarget.cloneNode(true);
+
+          // append the cloned node to the avatar node
+          this._avatarNode.appendChild(clonedItem);
+
+          // add the same width as the item element + adjust the position
+          // this is only possible to make programatically via javascript, because the user can set
+          // the style like he/she wants.
+          this._avatarNode.style.cssText = 'width:' + this.$.dragdroparea.offsetWidth + 'px;' +
+                                              'left:-' + moveLeft + 'px;' +
+                                              'top:-' + moveTop + 'px;';
+        },
+
+        // returns the value of the css property on the given element
+        _getComputedStyleValue: function(element, property) {
+          var style = element.currentStyle || window.getComputedStyle(element);
+
+          return style[property];
+        }
+      });
+
+    })();
+  </script>
+</polymer-element>
