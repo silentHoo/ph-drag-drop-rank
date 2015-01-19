@@ -6,13 +6,135 @@
 
   <script src="../webcomponentsjs/webcomponents.js"></script>
   <link rel="import" href="ph-drag-drop-rank.html">
+  
+  <style>
+    @keyframes pulsateOpacity {
+      0%   { opacity: 1.0; }
+      50%  { opacity: 0.3; }
+      100% { opacity: 1.0; }
+    }
+
+    @-webkit-keyframes pulsateOpacity {
+      0%   { opacity: 1.0; }
+      50%  { opacity: 0.3; }
+      100% { opacity: 1.0; }
+    }
+
+    @keyframes droppedSourceMyStyle {
+      0% {
+        background-color: #0066bb;
+      }
+
+      50% {
+        background-color: #9900bb;
+      }
+
+      100% {
+        background-color: #0066bb;
+      }
+    }
+
+    @-webkit-keyframes droppedSourceMyStyle {
+      0% {
+        background-color: #0066bb;
+      }
+
+      50% {
+        background-color: #9900bb;
+      }
+
+      100% {
+        background-color: #0066bb;
+      }
+    }
+
+    @keyframes droppedTargetMyStyle {
+      0% {
+        background-color: #0066bb;
+      }
+
+      50% {
+        background-color: #9900bb;
+      }
+
+      100% {
+        background-color: #0066bb;
+      }
+    }
+
+    @-webkit-keyframes droppedTargetMyStyle {
+      0% {
+        background-color: #0066bb;
+      }
+
+      50% {
+        background-color: #9900bb;
+      }
+
+      100% {
+        background-color: #0066bb;
+      }
+    }
+  
+    ph-drag-drop-rank::shadow item /* all items which are given by the user */,
+    item /* the dragged item lives in the global html context under html item! This is caused by <dore-drag-drop> */ {
+      display: block;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+      background-color: #0066bb;
+      color: white;
+      border: 1px #0066bb solid;
+    }
+    
+    /*
+        You can overwrite the styles defined in the component by using the shadow selector.
+    */
+    #styled::shadow item.dragging {
+      border: 1px red solid;
+      background-color: pink;
+      animation: pulsateOpacity 2s infinite linear;
+      -webkit-animation: pulsateOpacity 2s infinite linear;
+    }
+    
+    #styled::shadow item.dropped-source {
+      /* animations with keyframes don't work by now as of https://code.google.com/p/chromium/issues/detail?id=382498 */
+      animation: droppedSourceMyStyle 1s linear 0ms !important;
+      -webkit-animation: droppedSourceMyStyle 1s linear 0ms !important;
+      
+      /* but this works: */
+      background-color: pink;
+    }
+
+    #styled::shadow item.dropped-target {
+      /* animations with keyframes don't work by now as of https://code.google.com/p/chromium/issues/detail?id=382498 */
+      animation: droppedTargetMyStyle 1s linear 0ms !important;
+      -webkit-animation: droppedTargetMyStyle 1s linear 0ms !important;
+      
+      /* but this works: */
+      background-color: yellow;
+    }
+   </style>
 
 </head>
 <body unresolved>
 
-  <p>A `ph-drag-drop-rank` looks like:</p>
+  <p>A `ph-drag-drop-rank` (unstyled) looks like:</p>
 
   <ph-drag-drop-rank>
+      <item>Answer 1</item>
+      <item>Answer 2</item>
+      <item>Answer 3</item>
+      <item>Answer 4</item>
+      <item>Answer 5</item>
+      <item>Answer 6</item>
+  </ph-drag-drop-rank>
+  
+  <p>A `ph-drag-drop-rank` (styled) looks like:</p>
+
+  <ph-drag-drop-rank id="styled">
       <item>Answer 1</item>
       <item>Answer 2</item>
       <item>Answer 3</item>
