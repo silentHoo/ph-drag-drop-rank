@@ -1,0 +1,34 @@
+{
+  "author": "Patrick Hillert",
+  "name": "ph-drag-drop-rank",
+  "description": "A ranking element for individual styled elements.",
+  "license": "BSD",
+  "keywords": [
+    "rank",
+    "ranking",
+    "polymer",
+    "drag and drop",
+    "survey element",
+    "survey",
+    "web-components"
+  ],
+  "main": "ph-drag-drop-rank.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.2",
+    "core-drag-drop": "Polymer/core-drag-drop#^0.5.2"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.0.0"
+  },
+  "homepage": "https://github.com/silentHoo/ph-drag-drop-rank",
+  "_release": "74aaa278af",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "74aaa278af15a66f09727d2825df344e3aa554ba"
+  },
+  "_source": "git://github.com/silentHoo/ph-drag-drop-rank.git",
+  "_target": "master",
+  "_originalSource": "silentHoo/ph-drag-drop-rank",
+  "_direct": true
+}
