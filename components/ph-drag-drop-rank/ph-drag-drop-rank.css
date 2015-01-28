@@ -1,104 +1,93 @@
 /* see http://css-tricks.com/snippets/css/keyframe-animation-syntax */
-@keyframes pulsateOpacity {
-  0%   { opacity: 1.0; }
-  50%  { opacity: 0.3; }
-  100% { opacity: 1.0; }
-}
-
 @-webkit-keyframes pulsateOpacity {
-  0%   { opacity: 1.0; }
-  50%  { opacity: 0.3; }
-  100% { opacity: 1.0; }
-}
-
-@keyframes droppedSource {
   0% {
-    background-color: #0066bb;
-  }
+    opacity: 1; }
 
   50% {
-    background-color: #bb1604;
-  }
+    opacity: 0.3; }
 
   100% {
-    background-color: #0066bb;
-  }
-}
+    opacity: 1; } }
+@keyframes pulsateOpacity {
+  0% {
+    opacity: 1; }
+
+  50% {
+    opacity: 0.3; }
+
+  100% {
+    opacity: 1; } }
 
 @-webkit-keyframes droppedSource {
   0% {
-    background-color: #0066bb;
-  }
+    background-color: #0066bb; }
 
   50% {
-    background-color: #bb1604;
-  }
+    background-color: #bb1604; }
 
   100% {
-    background-color: #0066bb;
-  }
-}
+    background-color: #0066bb; } }
 
-@keyframes droppedTarget {
+@keyframes droppedSource {
   0% {
-    background-color: #0066bb;
-  }
+    background-color: #0066bb; }
 
   50% {
-    background-color: #55bb05;
-  }
+    background-color: #bb1604; }
 
   100% {
-    background-color: #0066bb;
-  }
-}
+    background-color: #0066bb; } }
 
 @-webkit-keyframes droppedTarget {
   0% {
-    background-color: #0066bb;
-  }
+    background-color: #0066bb; }
 
   50% {
-    background-color: #55bb05;
-  }
+    background-color: #55bb05; }
 
   100% {
-    background-color: #0066bb;
-  }
-}
+    background-color: #0066bb; } }
+
+@keyframes droppedTarget {
+  0% {
+    background-color: #0066bb; }
+
+  50% {
+    background-color: #55bb05; }
+
+  100% {
+    background-color: #0066bb; } }
 
 :host {
-  display: block;
-}
+  display: block; }
 
 /* ### The following styles should be overwritten from the outside to the consumer needs ### */
-
 /* The <item> element which is given from the user. This is the one inside of <ph-drag-drop-rank>. */
 item {
   cursor: move;
-  user-select: none;
-}
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none; }
 
 /*
     The item which is copied under the mouse/finger when moving.
-    
-    Overwrite from the outside: ph-drag-drop-rank::shadow item.dragging { ... } 
+
+    Overwrite from the outside: ph-drag-drop-rank::shadow item.dragging { ... }
 */
 item.dragging {
   border: 1px grey dashed;
-  animation: pulsateOpacity 2s infinite linear;
   -webkit-animation: pulsateOpacity 2s infinite linear;
-}
+          animation: pulsateOpacity 2s infinite linear; }
 
 /*
     The selected item, when the user drops it.
-    
+
     Overwrite from the outside: ph-drag-drop-rank::shadow item.dropped-source { ... }
 */
 item.dropped-source {
-  animation: droppedSource 1s linear 0ms;
   -webkit-animation: droppedSource 1s linear 0ms;
-}
+          animation: droppedSource 1s linear 0ms; }
 
 /*
     The target item, when the user drops the selected item on it.
@@ -106,6 +95,5 @@ item.dropped-source {
     Overwrite from the outside: ph-drag-drop-rank::shadow item.dropped-target { ... }
 */
 item.dropped-target {
-  animation: droppedTarget 1s linear 0ms;
   -webkit-animation: droppedTarget 1s linear 0ms;
-}
+          animation: droppedTarget 1s linear 0ms; }

@@ -15,7 +15,7 @@ Example:
       <item>Answer 5</item>
       <item>Answer 6</item>
     </ph-drag-drop-rank>
-    
+
 == Custom Styling ==
 
 You can style the component as you need it. There are some CSS classes which are added on some user action. Please
@@ -69,6 +69,7 @@ You should see the demo.html for more infos on that.
 
   <script>
     (function () {
+      'use strict';
 
       Polymer({
         _items: null,
@@ -80,26 +81,43 @@ You should see the demo.html for more infos on that.
           y: -1
         },
 
-        // stores the bounding box pixel coordinates to adjust the position of the dragged element when the user
-        // drags it.
-        _itemBoundingBox: null,
+        _itemBoundingBox: null,   // stores the bounding box pixel coordinates to adjust the position of the dragged
+                                  // element when the user drags it.
+        _avatarNode: null,        // stores the `<core-drag-drop>`s avatar element. This is where the content is placed
+                                  // when the user drags an element around. There is the place where we insert the copy
+                                  // of the item to give user feedback.
+        _dragTarget: null,        // stores the element the user has dragged previously
+        _lastDragTarget: null,    // stores the last dragged element
+        _lastDropTarget: null,    // stores the last element where the user has dropped the dragged element
 
-        // stores the `<core-drag-drop>`s avatar element. This is where the content is placed when the user drags
-        // an element around. There is the place where we insert the copy of the item to give user feedback.
-        _avatarNode: null,
-
-        // stores the element the user has dragged previously
-        _dragTarget: null,
-
-        // stores the last dragged element
-        _lastDragTarget: null,
-
-        // stores the last element where the user has dropped the dragged element
-        _lastDropTarget: null,
-
-        // fired when the component is ready
         ready: function() {
-          this._initState();
+          this._init();
+        },
+
+        detached: function() {
+          this._removeDragStartEvent();
+        },
+
+        // gets all the consumer provided distributed item nodes
+        _init: function() {
+          this._items = [];
+          [].forEach.call(this.$.items.getDistributedNodes(), function (node, i) {
+            var cNode = node.cloneNode(true);
+            cNode.setAttribute('draggable', false);
+
+            // we must save the mouse/finger down position to adjust the element accordingly
+            // when the user is tapping on an element
+            cNode.addEventListener('down', (function(event) {
+              this._userCoordinates.x = event.x;
+              this._userCoordinates.y = event.y;
+            }).bind(this));
+
+            this._items.push(cNode);
+          }, this);
+
+          // insert the elements the first time
+          this._draw();
+          this._addDragStartEvent();
         },
 
         // insert all consumer provided items into the drag and drop area
@@ -113,35 +131,22 @@ You should see the demo.html for more infos on that.
           }
         },
 
-        // gets all the consumer provided distributed item nodes
-        _initState: function() {
-          // save distributed nodes in state
-          this._items = Array.prototype.slice.call(this.$.items.getDistributedNodes());
-
-          for (var i = 0; i < this._items.length; i++) {
-            this._items[i].setAttribute('draggable', false);
-
-            // we must save the mouse/finger down position to adjust the element accordingly
-            // when the user is tapping on an element
-            this._items[i].addEventListener('down', (function(event) {
-              this._userCoordinates.x = event.x;
-              this._userCoordinates.y = event.y;
-            }).bind(this));
-          }
-
-          // insert the elements the first time
-          this._draw();
-
-          // wait for a drag start event
+        _addDragStartEvent: function() {
           this.addEventListener('drag-start', this.onDragStart.bind(this));
+        },
+
+        _removeDragStartEvent: function() {
+          this.removeEventListener('drag-start', this.onDragStart.bind(this));
         },
 
         // called when the user begins to start a drag action
         onDragStart: function(e) {
           // only if this is not the first time, we remove previously attached class names from the nodes
-          if (this._lastDragTarget !== null && this._lastDropTarget !== null) {
-            // remove classes from the previous drag & drop action
+          if (this._lastDragTarget !== null) {
             this._lastDragTarget.classList.remove('dropped-source');
+          }
+
+          if (this._lastDropTarget !== null) {
             this._lastDropTarget.classList.remove('dropped-target');
           }
 
@@ -179,6 +184,12 @@ You should see the demo.html for more infos on that.
           dragTarget.classList.add('dropped-source');
           dropTarget.classList.add('dropped-target');
 
+          // @todo: improve the removal of css classes, because we assume that the animations last ~2s
+          this.job('remove css classes after 2 secs', function() {
+            dragTarget.classList.remove('dropped-source');
+            dropTarget.classList.remove('dropped-target');
+          }, 2000);
+
           // we let only drop items on items
           if (dropTarget.nodeName != 'ITEM') {
             return;
@@ -192,10 +203,10 @@ You should see the demo.html for more infos on that.
           this._items[dragTargetItemId] = this._items[dropTargetItemId];
           this._items[dropTargetItemId] = temp;
 
-          this._draw();
-
           this._lastDragTarget = dragTarget;
           this._lastDropTarget = dropTarget;
+
+          this._draw();
         },
 
         // the avatar is a wrapper container to place something in so that the user have a visual feedback of what
@@ -235,7 +246,6 @@ You should see the demo.html for more infos on that.
         // returns the value of the css property on the given element
         _getComputedStyleValue: function(element, property) {
           var style = element.currentStyle || window.getComputedStyle(element);
-
           return style[property];
         }
       });
