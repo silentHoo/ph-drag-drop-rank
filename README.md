@@ -21,7 +21,7 @@ Import the component by adding this to your HTML file:
 
 `<link rel="import" href="components/ph-drag-drop-rank/ph-drag-drop-rank.html">`
 
-## 3. Use
+## 3. Use / Demo
 
 See the [component page](http://silentHoo.github.io/ph-drag-drop-rank) for more information.
 
